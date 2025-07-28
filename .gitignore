@@ -184,13 +184,15 @@ logs/
 
 # Docker
 docker-compose.override.yml
-.dockerignore
 
 # Cache and temporary files
 .cache/
 tmp/
 temp/
 cache/
+
+# Redis dump
+dump.rdb
 
 # Test coverage and reports
 test-results/
