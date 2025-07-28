@@ -1,108 +1,99 @@
 # Crypto Price Service - ETH/USDT FastAPI
 
-KA>:>=03@C65==K9 FastAPI-A5@28A 4;O ?>;CG5=8O 40==KE ?> B>@3>2>9 ?0@5 ETH/USDT.
+Высоконагруженный FastAPI-сервис для получения данных по торговой паре ETH/USDT.
 
-## "@51>20=8O
+## Требования
 
 - Docker 20.10+
 - Docker Compose 2.0+
-- Make (>?F8>=0;L=>)
-- 4GB RAM <8=8<C< 4;O 107>2>9 25@A88
-- 8GB RAM 4;O 25@A88 A <>=8B>@8=3>< 8 <0AHB018@>20=85<
+- Make (опционально)
+- 4GB RAM минимум для базовой версии
+- 8GB RAM для версии с мониторингом и масштабированием
 
-## KAB@K9 AB0@B
+## Быстрый старт
 
-### Production @568< (<8=8<0;L=0O :>=D83C@0F8O)
+### Production режим (минимальная конфигурация)
 
 ```bash
-# ;>=8@>20BL @5?>78B>@89
+# Клонировать репозиторий
 git clone <repository-url>
 cd crypto-price-service
 
-# !1>@:0 8 70?CA:
+# Сборка и запуск
 docker-compose up -d
 
-# @>25@:0 AB0BCA0
+# Проверка статуса
 docker-compose ps
 
-# API 1C45B 4>ABC?5= =0 http://localhost:8000/api/
+# API будет доступен на http://localhost:8000/api/
 ```
 
-### Development @568<
+### Development режим
 
 ```bash
-# 0?CAB8BL 2 dev @568<5 A hot reload
+# Запустить в dev режиме с hot reload
 docker-compose -f docker-compose.dev.yml up
 
-# API 1C45B 4>ABC?5= =0 http://localhost:8000
-```
-
-### Production A <0AHB018@>20=85< 8 <>=8B>@8=3><
-
-```bash
-# 0?CA: A Nginx 10;0=A8@>2I8:>< (2 @5?;8:8 ?@8;>65=8O)
-docker-compose -f docker-compose.scale.yml up -d
-
-# :;NG8BL <>=8B>@8=3
-docker-compose -f docker-compose.scale.yml --profile monitoring up -d
-
-# 0AHB018@>20=85 4> 5 @5?;8:
-docker-compose -f docker-compose.scale.yml up -d --scale app=5
+# API будет доступен на http://localhost:8000
 ```
 
 ## API Endpoints
 
-- `GET /api/v1/prices/eth-usdt` - "5:CI0O F5=0 ETH/USDT
-- `GET /health/liveness` - @>25@:0 687=5A?>A>1=>AB8
-- `GET /health/readiness` - @>25@:0 3>B>2=>AB8
-- `GET /metrics` - Prometheus <5B@8:8
+- `GET /api/v1/prices/eth-usdt` - Текущая цена ETH/USDT
+- `GET /health/liveness` - Проверка жизнеспособности
+- `GET /health/readiness` - Проверка готовности
+- `GET /metrics` - Prometheus метрики (порт 8001)
 
-## @>872>48B5;L=>ABL
+## Производительность
 
-8=8<0;L=0O :>=D83C@0F8O (1 :>=B59=5@, 8 2>@:5@>2) >15A?5G8205B:
-- 300+ >4=>2@5<5==KE ?>4:;NG5=89
-- Response time < 1000ms ?@8 ?8:>2>9 =03@C7:5
-- > 500 req/s throughput
+Минимальная конфигурация (1 контейнер, 8 воркеров) обеспечивает:
+- 300+ одновременных подключений
+- Response time < 1000ms при пиковой нагрузке
+- До 500 req/s throughput
 
-## 03@C7>G=>5 B5AB8@>20=85
+## Нагрузочное тестирование
 
 ```bash
-# #AB0=>28BL hey
+# Установить hey
 go install github.com/rakyll/hey@latest
 
-# "5AB A 300 >4=>2@5<5==K<8 ?>4:;NG5=8O<8
+# Тест с 300 одновременными подключениями
 hey -n 10000 -c 300 http://localhost:8000/api/v1/prices/eth-usdt
 
-# ;8B5;L=K9 B5AB
+# Длительный тест
 hey -z 60s -c 300 http://localhost:8000/api/v1/prices/eth-usdt
 ```
 
-## >=D83C@0F8O
+## Конфигурация
 
-A=>2=K5 ?5@5<5==K5 >:@C65=8O:
+Основные переменные окружения:
 
-- `WORKERS` - :>;8G5AB2> Gunicorn workers (default: 8)
-- `REDIS_URL` - URL 4;O ?>4:;NG5=8O : Redis
-- `LOG_LEVEL` - C@>25=L ;>38@>20=8O (debug/info/warning/error)
-- `CACHE_TTL` - TTL 4;O L1 :MH0 2 A5:C=40E (default: 5)
+- `WORKERS` - количество Gunicorn workers (default: 8)
+- `REDIS_URL` - URL для подключения к Redis
+- `LOG_LEVEL` - уровень логирования (debug/info/warning/error)
+- `CACHE_TTL` - TTL для L1 кэша в секундах (default: 5)
 
-## >=8B>@8=3 (>?F8>=0;L=>)
+## Мониторинг
 
-@8 8A?>;L7>20=88 `docker-compose.scale.yml --profile monitoring`:
+Production конфигурация включает полный стек мониторинга:
 
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (admin/admin)
+- **Prometheus**: http://localhost:9090 - сбор метрик
+- **Grafana**: http://localhost:3000 (admin/admin) - визуализация метрик
+- **Loki**: http://localhost:3100 - централизованное хранение логов
+- **Promtail**: автоматический сбор логов из контейнеров
+
+Метрики доступны на отдельном порту: http://localhost:8001/metrics
 
 ## Troubleshooting
 
-### KA>:0O latency
-1. @>25@8BL ;>38: `docker-compose logs app`
-2. @>25@8BL CPU/Memory: `docker stats`
-3. #25;8G8BL :>;8G5AB2> workers 8;8 4>1028BL @5?;8:8
+### Высокая latency
+1. Проверить логи: `docker-compose logs app`
+2. Проверить CPU/Memory: `docker stats`
+3. Увеличить количество workers или добавить реплики
 
-### Connection refused ?@8 2KA>:>9 =03@C7:5
+### Connection refused при высокой нагрузке
 ```bash
-# #25;8G8BL ;8<8BK A8AB5<K
+# Увеличить лимиты системы
 sudo sysctl -w net.core.somaxconn=65535
 sudo sysctl -w net.ipv4.tcp_max_syn_backlog=65535
 ```
@@ -113,12 +104,42 @@ docker-compose logs redis
 docker-compose restart redis
 ```
 
-## @E8B5:BC@0
+## Архитектура
 
-- Clean Architecture A @0745;5=85< =0 A;>8
-- A8=E@>==0O >1@01>B:0 A AIOHTTP
-- =>3>C@>2=52>5 :MH8@>20=85 (In-Memory L1 + Redis L2)
-- Circuit Breaker 4;O 70I8BK >B A1>52 2=5H=8E API
-- Retry <5E0=87< A exponential backoff
+- Clean Architecture с разделением на слои
+- Асинхронная обработка с AIOHTTP
+- Многоуровневое кэширование (In-Memory L1 + Redis L2)
+- Circuit Breaker для защиты от сбоев внешних API
+- Retry механизм с exponential backoff
 
-!<. ?>;=CN 4>:C<5=B0F8N 2 `docs/architecture.md`
+См. полную документацию в `docs/architecture.md`
+
+## Структура проекта
+
+```
+src/
+├── domain/           # Бизнес-логика и сущности
+├── application/      # Use cases и интерфейсы
+├── infrastructure/   # Внешние сервисы и адаптеры
+├── presentation/     # API и web-слой
+└── shared/          # Общие утилиты
+```
+
+## Разработка
+
+### Запуск в dev режиме
+```bash
+make dev-up
+```
+
+### Запуск тестов
+```bash
+make test           # Unit тесты
+make test-load      # Нагрузочные тесты
+```
+
+### Линтеры и форматирование
+```bash
+make lint           # Проверка кода
+make format         # Форматирование кода
+```

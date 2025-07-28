@@ -1,2 +1,24 @@
-# main.py - Entry point for FastAPI application
-# TODO: Implement FastAPI application with all required endpoints
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="Crypto Pairs API",
+    description="High-performance cryptocurrency pairs tracking service",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.get("/")
+async def root():
+    return {"message": "Crypto Pairs API"}
