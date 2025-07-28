@@ -15,7 +15,13 @@ class CacheService(CacheServiceInterface):
     
     async def get(self, key: str, refresh_func=None) -> Optional[Any]:
         """Get value from memory cache with stale-while-revalidate"""
-        value = await self.cache.get(key, refresh_func)
+        # Bind refresh function with proper parameters if provided
+        bound_refresh_func = None
+        if refresh_func and key.startswith('price:') and key.count(':') == 2:
+            _, symbol, vs_currency = key.split(':', 2)
+            bound_refresh_func = lambda s=symbol, v=vs_currency: refresh_func(s, v)
+        
+        value = await self.cache.get(key, bound_refresh_func)
         if value is not None:
             CACHE_HITS.labels(cache_level="L1", operation="get").inc()
             return value

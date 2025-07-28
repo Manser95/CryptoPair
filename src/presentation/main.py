@@ -8,7 +8,7 @@ from src.shared.monitoring import get_metrics
 from src.presentation.api.middleware.correlation import CorrelationIdMiddleware
 from src.presentation.api.middleware.metrics import MetricsMiddleware
 from src.presentation.api.routers import prices, health
-from src.presentation.api.dependencies import get_coingecko_client
+from src.presentation.api.dependencies import get_coingecko_client, get_cache_service
 from src.infrastructure.services.cache_metrics_updater import cache_metrics_updater
 from src.shared.metrics_initializer import initialize_metrics
 
@@ -24,6 +24,10 @@ async def lifespan(app: FastAPI):
     # Initialize metrics
     initialize_metrics()
     logger.info("Metrics initialized")
+    
+    # Initialize cache metrics updater with cache service
+    cache_service = await get_cache_service()
+    cache_metrics_updater.set_cache_service(cache_service)
     
     # Start background tasks
     await cache_metrics_updater.start()

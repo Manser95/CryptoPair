@@ -1,16 +1,17 @@
 import asyncio
-from src.shared.monitoring import CACHE_HITS, CACHE_MISSES, CACHE_HIT_RATE
+from src.shared.monitoring import CACHE_HITS, CACHE_MISSES, CACHE_HIT_RATE, CACHE_SIZE
 from src.shared.logging import get_logger
 
 logger = get_logger(__name__)
 
 
 class CacheMetricsUpdater:
-    """Background task to update cache hit rate gauge"""
+    """Background task to update cache metrics"""
     
     def __init__(self):
         self.running = False
         self.task = None
+        self.cache_service = None
         
     async def start(self):
         """Start the metrics updater background task"""
@@ -44,14 +45,24 @@ class CacheMetricsUpdater:
                 total = hits + misses
                 if total > 0:
                     hit_rate = (hits / total) * 100
-                    CACHE_HIT_RATE.set(hit_rate)
+                    CACHE_HIT_RATE.labels(cache_level="L1").set(hit_rate)
                     logger.debug(f"Cache hit rate: {hit_rate:.2f}%")
+                
+                # Update cache size if cache service is available
+                if self.cache_service:
+                    stats = self.cache_service.get_stats()
+                    CACHE_SIZE.labels(cache_level="L1").set(stats.get('cache_size', 0))
                 
             except Exception as e:
                 logger.error(f"Error updating cache metrics: {e}")
             
             # Update every 10 seconds
             await asyncio.sleep(10)
+
+
+    def set_cache_service(self, cache_service):
+        """Set the cache service to get stats from"""
+        self.cache_service = cache_service
 
 
 # Global instance

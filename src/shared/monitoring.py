@@ -45,7 +45,26 @@ CACHE_MISSES = Counter(
 
 CACHE_HIT_RATE = Gauge(
     'cache_hit_rate',
-    'Cache hit rate percentage'
+    'Cache hit rate percentage',
+    ['cache_level']
+)
+
+CACHE_SIZE = Gauge(
+    'cache_size',
+    'Current cache size',
+    ['cache_level']
+)
+
+CACHE_EVICTIONS = Counter(
+    'cache_evictions_total',
+    'Total cache evictions',
+    ['cache_level', 'reason']
+)
+
+CACHE_REFRESH_TIME = Histogram(
+    'cache_refresh_duration_seconds',
+    'Time taken to refresh cache entries',
+    ['cache_level']
 )
 
 # Circuit breaker metrics

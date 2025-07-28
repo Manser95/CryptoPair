@@ -3,7 +3,6 @@ Factory for creating Circuit Breakers based on configuration
 """
 from typing import Optional, Dict, Any
 from src.infrastructure.circuit_breaker.breaker import CircuitBreaker
-from src.infrastructure.circuit_breaker.persistent_breaker import PersistentCircuitBreaker
 from src.shared.config import settings
 
 
@@ -40,22 +39,13 @@ class CircuitBreakerFactory:
         if name in cls._instances:
             return cls._instances[name]
         
-        # Create new instance based on configuration
-        if persistent:
-            breaker = PersistentCircuitBreaker(
-                name=name,
-                failure_threshold=failure_threshold,
-                recovery_timeout=recovery_timeout,
-                expected_exception=expected_exception,
-                **kwargs
-            )
-        else:
-            breaker = CircuitBreaker(
-                name=name,
-                failure_threshold=failure_threshold,
-                recovery_timeout=recovery_timeout,
-                expected_exception=expected_exception
-            )
+        # Create new instance
+        breaker = CircuitBreaker(
+            name=name,
+            failure_threshold=failure_threshold,
+            recovery_timeout=recovery_timeout,
+            expected_exception=expected_exception
+        )
         
         cls._instances[name] = breaker
         return breaker
