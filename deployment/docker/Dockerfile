@@ -32,6 +32,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY --chown=fastapi:fastapi . .
 
+# Копируем entrypoint скрипт до смены пользователя
+COPY --chown=fastapi:fastapi scripts/docker_entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker_entrypoint.sh
+
 USER fastapi
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
@@ -39,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 EXPOSE 8000
 
-CMD ["gunicorn", "src.presentation.main:app", "-c", "gunicorn.conf.py"]
+CMD ["/usr/local/bin/docker_entrypoint.sh"]

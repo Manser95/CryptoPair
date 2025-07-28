@@ -7,11 +7,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - WORKERS=8
-      - LOG_LEVEL=info
+      - WORKERS=16  # Увеличиваем количество воркеров
+      - LOG_LEVEL=warning  # Снижаем уровень логирования для производительности
       - ENABLE_METRICS=true
-      - CACHE_TTL_L1=10
+      - CACHE_TTL_L1=5  # Оптимальный TTL
+      - CACHE_MAX_SIZE=100000  # Больше места для кеша
       - LOG_FORMAT=json
+      - PYTHONUNBUFFERED=1
+      - UVLOOP_USE_MONOTONIC=1  # Оптимизация для uvloop
     networks:
       - app-network
     volumes:

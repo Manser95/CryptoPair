@@ -1,30 +1,34 @@
-# gunicorn.conf.py - оптимизация для 300+ подключений
+# gunicorn.conf.py - оптимизация для высокой производительности
 import multiprocessing
 import os
 
-# Расчет воркеров: оптимизировано для высокой нагрузки
-# Для 500+ подключений увеличиваем до 12 воркеров
-workers = int(os.environ.get('WORKERS', min(multiprocessing.cpu_count() * 3, 12)))
+# Воркеры берутся из переменной окружения WORKERS (задается в docker_entrypoint.sh)
+# Если WORKERS не задан в entrypoint, используем оптимальную формулу
+if 'WORKERS' not in os.environ:
+    cpu_count = multiprocessing.cpu_count()
+    workers = min((2 * cpu_count) + 1, 16)
+
+# Обязательно используем Uvicorn воркеры для асинхронности
 worker_class = "uvicorn.workers.UvicornWorker"
 
 # Увеличенный лимит соединений на воркер  
-# 500+ соединений / 12 воркеров = ~50 на воркер (с запасом ставим 2000)
-worker_connections = 2000
+# Для асинхронных воркеров можно держать много соединений
+worker_connections = 10000
 
 # Сетевые настройки
 bind = "0.0.0.0:8000"
 backlog = 2048  # Очередь ожидающих соединений
 
-# Performance tuning - оптимизировано для высокой нагрузки
-max_requests = 2000  # Перезапуск воркера после N запросов
-max_requests_jitter = 400  # Случайный разброс для предотвращения одновременного рестарта
+# Performance tuning - максимальная производительность
+max_requests = 10000  # Увеличиваем до 10k запросов
+max_requests_jitter = 1000  # Случайный разброс
 preload_app = True  # Загрузка приложения до форка воркеров
 worker_tmp_dir = "/dev/shm"  # RAM-диск для временных файлов
 
-# Timeout конфигурация
-timeout = 300  # Общий таймаут запроса
-keepalive = 5  # Keep-alive соединения
-graceful_timeout = 60  # Время для graceful shutdown
+# Timeout конфигурация - сокращаем таймауты
+timeout = 30  # Снижаем общий таймаут до 30 секунд
+keepalive = 2  # Keep-alive 2 секунды
+graceful_timeout = 30  # Время для graceful shutdown
 
 # Логирование
 accesslog = "-"  # stdout

@@ -17,7 +17,10 @@ class BaseHttpClient:
                 limit_per_host=settings.aiohttp_connections_per_host,
                 ttl_dns_cache=settings.aiohttp_dns_ttl,
                 use_dns_cache=True,
-                enable_cleanup_closed=True
+                enable_cleanup_closed=True,
+                force_close=False,  # Переиспользуем соединения
+                keepalive_timeout=30,  # Keep-alive для соединений
+                ssl=False  # Отключаем SSL проверку для скорости (только для тестирования!)
             )
             
             timeout = aiohttp.ClientTimeout(
@@ -48,7 +51,6 @@ class BaseHttpClient:
     ) -> Dict[str, Any]:
         session = await self._get_session()
         
-        logger.debug(f"Making {method} request to {url}")
         
         try:
             async with session.request(

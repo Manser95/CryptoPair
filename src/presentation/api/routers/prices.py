@@ -27,16 +27,6 @@ async def get_crypto_price(
 ):
     """Get current price for a cryptocurrency pair"""
     try:
-        # Log with additional context
-        logger.info(
-            f"Getting price for {symbol}/{vs_currency}",
-            extra={
-                "endpoint": f"/prices/{symbol}-{vs_currency}",
-                "method": "GET",
-                "correlation_id": getattr(request.state, "correlation_id", "no-correlation-id")
-            }
-        )
-        
         price = await use_case.execute(symbol, vs_currency)
         
         if not price:

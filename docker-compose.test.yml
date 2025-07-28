@@ -16,6 +16,42 @@ services:
       - test-network
     command: pytest
 
+  # Locust master node (web UI)
+  locust-master:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.test
+    command: locust -f tests/load/locustfile.py --master --host=http://host.docker.internal:8000 --web-host=0.0.0.0 --web-port=8089
+    ports:
+      - "8089:8089"  # Web UI
+      - "5557:5557"  # Master-Worker communication
+    volumes:
+      - ./tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+    networks:
+      - test-network
+    restart: unless-stopped
+
+  # Locust worker nodes (can be scaled)
+  locust-worker:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.test
+    command: locust -f tests/load/locustfile.py --worker --master-host=locust-master
+    volumes:
+      - ./tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+      - LOCUST_LOGLEVEL=WARNING
+    networks:
+      - test-network
+    restart: unless-stopped
+    depends_on:
+      - locust-master
+    deploy:
+      replicas: 4  # Default 4 workers
+
 networks:
   test-network:
     driver: bridge

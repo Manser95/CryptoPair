@@ -14,25 +14,25 @@ class Settings(BaseSettings):
     
     
     # Cache TTL - оптимизировано для высокой нагрузки
-    cache_ttl_l1: int = Field(default=2, description="Memory cache TTL in seconds (2-5 range)")
-    cache_max_size: int = Field(default=50000, description="Maximum cache entries")
+    cache_ttl_l1: int = Field(default=5, description="Memory cache TTL in seconds (увеличено до 5)")
+    cache_max_size: int = Field(default=100000, description="Maximum cache entries (увеличено до 100k)")
     
-    # CoinGecko API - оптимизированные таймауты
+    # CoinGecko API - агрессивные таймауты для быстрого отклика
     coingecko_api_key: Optional[str] = Field(default=None)
     coingecko_base_url: str = Field(default="https://api.coingecko.com/api/v3")
-    coingecko_timeout: int = Field(default=10)  # Снижено с 30 до 10 секунд
-    coingecko_connect_timeout: int = Field(default=3)  # Таймаут подключения
-    coingecko_read_timeout: int = Field(default=7)  # Таймаут чтения
+    coingecko_timeout: int = Field(default=10) 
+    coingecko_connect_timeout: int = Field(default=3)
+    coingecko_read_timeout: int = Field(default=5)
     
     # Circuit Breaker
     circuit_breaker_failure_threshold: int = Field(default=5)
     circuit_breaker_recovery_timeout: int = Field(default=60)
     
-    # Retry
-    retry_max_attempts: int = Field(default=5)
-    retry_wait_fixed: int = Field(default=4)
+    # Retry - быстрые повторы
+    retry_max_attempts: int = Field(default=3)  # Меньше попыток
+    retry_wait_fixed: int = Field(default=1)  # Быстрее повторы
     retry_wait_random_min: int = Field(default=0)
-    retry_wait_random_max: int = Field(default=2)
+    retry_wait_random_max: int = Field(default=1)
     
     # Rate limiting
     rate_limit_calls: int = Field(default=30)

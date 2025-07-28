@@ -58,8 +58,6 @@ class CoinGeckoClient(BaseHttpClient):
         if include_last_updated_at:
             params["include_last_updated_at"] = "true"
         
-        logger.info(f"Fetching price for {ids} in {vs_currencies}")
-        logger.debug(f"Request headers: {self._get_headers()}")
         
         try:
             data = await self.request(
@@ -69,7 +67,6 @@ class CoinGeckoClient(BaseHttpClient):
                 params=params
             )
             
-            logger.debug(f"Received price data: {data}")
             return data
             
         except Exception as e:

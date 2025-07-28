@@ -1,5 +1,5 @@
 # Makefile
-.PHONY: help build up down logs test test-unit test-integration test-load test-stress test-all test-docker test-ci clean scale dev-build dev-up dev-down dev-logs shell redis-cli grafana prometheus loki health lint format install-deps poetry-install k6-test locust-test setup-test
+.PHONY: help build up down logs test test-unit test-integration test-load test-stress test-all test-docker test-ci clean scale dev-build dev-up dev-down dev-logs shell redis-cli grafana prometheus loki health lint format install-deps poetry-install k6-test locust-test locust-cluster-up locust-cluster-down locust-scale locust-cluster-logs locust-basic locust-stress locust-endurance setup-test
 
 help:
 	@echo "Available commands:"
@@ -16,7 +16,13 @@ help:
 	@echo "  make test-load           - Run load tests with hey"
 	@echo "  make test-stress         - Run stress test for 60 seconds"
 	@echo "  make k6-test             - Run k6 load tests"
-	@echo "  make locust-test         - Run locust load tests"
+	@echo "  make locust-test         - Run locust load tests (standalone)"
+	@echo "  make locust-cluster-up   - Start Locust cluster (master + workers)"
+	@echo "  make locust-scale N=X    - Scale Locust to X workers"
+	@echo "  make locust-cluster-down - Stop Locust cluster"
+	@echo "  make locust-basic        - Run basic load test (300 users)"
+	@echo "  make locust-stress       - Run stress test (500 users)"
+	@echo "  make locust-endurance    - Run endurance test (10 min)"
 	@echo "  make benchmark           - Run performance benchmark suite"
 	@echo "  make benchmark-quick     - Run quick performance benchmark"
 	@echo "  make clean               - Clean up containers and volumes"
@@ -150,13 +156,66 @@ k6-test:
 	k6 run tests/load/k6_test.js
 
 locust-test:
-	@echo "Running locust load tests..."
+	@echo "Running locust load tests in standalone mode..."
 	@echo "Building test image with locust..."
 	@docker-compose -f docker-compose.test.yml build test
 	@echo "Starting Locust web UI..."
 	@echo "Locust web UI will be available at http://localhost:8089"
 	@echo "Press Ctrl+C to stop"
 	docker-compose -f docker-compose.test.yml run --rm -p 8089:8089 test locust -f tests/load/locustfile.py --host=http://host.docker.internal:8000 --web-host=0.0.0.0 --web-port=8089
+
+# Cluster mode Locust commands for high-performance testing
+locust-cluster-up:
+	@echo "🚀 Starting Locust in cluster mode (master + 4 workers)..."
+	@echo "Building images..."
+	@docker-compose -f docker-compose.test.yml build locust-master locust-worker
+	@echo "Starting Locust master..."
+	@docker-compose -f docker-compose.test.yml up -d locust-master
+	@echo "Starting Locust workers..."
+	@docker-compose -f docker-compose.test.yml up -d --scale locust-worker=4 locust-worker
+	@echo ""
+	@echo "✅ Locust cluster is running!"
+	@echo "   - Web UI: http://localhost:8089"
+	@echo "   - Workers: 4 (use 'make locust-scale N=X' to change)"
+	@echo ""
+	@echo "Opening Locust web UI..."
+	@open http://localhost:8089 2>/dev/null || xdg-open http://localhost:8089 2>/dev/null || echo "Please open http://localhost:8089 in your browser"
+
+locust-scale:
+	@if [ -z "$(N)" ]; then echo "Usage: make locust-scale N=8"; exit 1; fi
+	@echo "Scaling Locust workers to $(N)..."
+	@docker-compose -f docker-compose.test.yml up -d --scale locust-worker=$(N) locust-worker
+	@echo "✅ Scaled to $(N) workers"
+
+locust-cluster-down:
+	@echo "Stopping Locust cluster..."
+	@docker-compose -f docker-compose.test.yml stop locust-master locust-worker
+	@docker-compose -f docker-compose.test.yml rm -f locust-master locust-worker
+
+locust-cluster-logs:
+	@docker-compose -f docker-compose.test.yml logs -f locust-master locust-worker
+
+# Pre-configured load test scenarios
+locust-basic:
+	@echo "Running basic load test (300 users over 30 seconds)..."
+	@docker-compose -f docker-compose.test.yml run --rm test \
+		locust -f tests/load/locustfile.py --host=http://host.docker.internal:8000 \
+		--headless --users=300 --spawn-rate=10 --run-time=30s \
+		--html=tests/load/reports/basic-test.html
+
+locust-stress:
+	@echo "Running stress test (500 users, high spawn rate)..."
+	@docker-compose -f docker-compose.test.yml run --rm test \
+		locust -f tests/load/locustfile.py --host=http://host.docker.internal:8000 \
+		--headless --users=500 --spawn-rate=50 --run-time=2m \
+		--html=tests/load/reports/stress-test.html
+
+locust-endurance:
+	@echo "Running endurance test (300 users for 10 minutes)..."
+	@docker-compose -f docker-compose.test.yml run --rm test \
+		locust -f tests/load/locustfile.py --host=http://host.docker.internal:8000 \
+		--headless --users=300 --spawn-rate=5 --run-time=10m \
+		--html=tests/load/reports/endurance-test.html
 
 benchmark:
 	@echo "Running performance benchmark suite..."

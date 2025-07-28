@@ -25,7 +25,7 @@ def initialize_metrics():
     # Cache metrics
     CACHE_HITS.labels(cache_level="memory", operation="get").inc(0)
     CACHE_MISSES.labels(cache_level="memory", operation="get").inc(0)
-    CACHE_HIT_RATE.set(0)
+    CACHE_HIT_RATE.labels(cache_level="memory").set(0)
     
     # External API metrics
     EXTERNAL_API_REQUESTS.labels(api="coingecko", endpoint="/simple/price", status="success").inc(0)
