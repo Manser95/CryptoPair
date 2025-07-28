@@ -43,6 +43,11 @@ CACHE_MISSES = Counter(
     ['cache_level', 'operation']
 )
 
+CACHE_HIT_RATE = Gauge(
+    'cache_hit_rate',
+    'Cache hit rate percentage'
+)
+
 # Circuit breaker metrics
 CIRCUIT_BREAKER_STATE = Gauge(
     'circuit_breaker_state',

@@ -3,7 +3,7 @@ from datetime import datetime
 from src.application.interfaces.price_repository import PriceRepositoryInterface
 from src.domain.entities.crypto_price import CryptoPrice
 from src.infrastructure.api_clients.coingecko_client import CoinGeckoClient
-from src.infrastructure.circuit_breaker.breaker import CircuitBreaker
+from src.infrastructure.circuit_breaker.factory import CircuitBreakerFactory
 from src.infrastructure.resilience.retry_strategies import exponential_backoff_retry
 from src.shared.monitoring import track_external_api_metrics
 from src.shared.logging import get_logger
@@ -14,7 +14,12 @@ logger = get_logger(__name__)
 class PriceRepository(PriceRepositoryInterface):
     def __init__(self, coingecko_client: CoinGeckoClient):
         self.client = coingecko_client
-        self.circuit_breaker = CircuitBreaker()
+        self.circuit_breaker = CircuitBreakerFactory.create(
+            name="coingecko",
+            failure_threshold=5,
+            recovery_timeout=60,
+            persistent=False
+        )
     
     @exponential_backoff_retry(exceptions=Exception)
     @track_external_api_metrics(api="coingecko", endpoint="simple/price")

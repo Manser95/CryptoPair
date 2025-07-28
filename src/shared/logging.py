@@ -26,12 +26,19 @@ def setup_logging():
     # Format based on settings
     if settings.log_format == "json":
         formatter = jsonlogger.JsonFormatter(
-            fmt='%(asctime)s %(name)s %(levelname)s %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            fmt='%(asctime)s %(name)s %(levelname)s %(message)s %(pathname)s %(funcName)s %(lineno)d %(correlation_id)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
+            rename_fields={
+                'asctime': 'timestamp',
+                'levelname': 'level',
+                'pathname': 'file',
+                'funcName': 'function',
+                'lineno': 'line'
+            }
         )
     else:
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(name)s - %(levelname)s - [%(correlation_id)s] - %(message)s'
         )
     
     handler.setFormatter(formatter)

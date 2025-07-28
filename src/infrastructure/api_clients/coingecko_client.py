@@ -48,13 +48,18 @@ class CoinGeckoClient(BaseHttpClient):
         
         params = {
             "ids": ids,
-            "vs_currencies": vs_currencies,
-            "include_24hr_vol": str(include_24hr_vol).lower(),
-            "include_24hr_change": str(include_24hr_change).lower(),
-            "include_last_updated_at": str(include_last_updated_at).lower()
+            "vs_currencies": vs_currencies
         }
         
+        if include_24hr_vol:
+            params["include_24hr_vol"] = "true"
+        if include_24hr_change:
+            params["include_24hr_change"] = "true"
+        if include_last_updated_at:
+            params["include_last_updated_at"] = "true"
+        
         logger.info(f"Fetching price for {ids} in {vs_currencies}")
+        logger.debug(f"Request headers: {self._get_headers()}")
         
         try:
             data = await self.request(

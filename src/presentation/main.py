@@ -8,7 +8,9 @@ from src.shared.monitoring import get_metrics
 from src.presentation.api.middleware.correlation import CorrelationIdMiddleware
 from src.presentation.api.middleware.metrics import MetricsMiddleware
 from src.presentation.api.routers import prices, health
-from src.presentation.api.dependencies import get_coingecko_client, get_redis_cache
+from src.presentation.api.dependencies import get_coingecko_client
+from src.infrastructure.services.cache_metrics_updater import cache_metrics_updater
+from src.shared.metrics_initializer import initialize_metrics
 
 # Setup logging
 logger = setup_logging()
@@ -19,17 +21,24 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Crypto Pairs API")
     
+    # Initialize metrics
+    initialize_metrics()
+    logger.info("Metrics initialized")
+    
+    # Start background tasks
+    await cache_metrics_updater.start()
+    
     yield
     
     # Shutdown
     logger.info("Shutting down Crypto Pairs API")
     
+    # Stop background tasks
+    await cache_metrics_updater.stop()
+    
     # Cleanup connections
     client = await get_coingecko_client()
     await client.close()
-    
-    redis = await get_redis_cache()
-    await redis.close()
 
 
 app = FastAPI(
@@ -62,6 +71,12 @@ async def root():
         "version": settings.app_version,
         "docs": "/docs"
     }
+
+
+@app.get("/health")
+async def health():
+    """Health check for compatibility"""
+    return {"status": "healthy", "message": "Use /health/liveness or /health/readiness"}
 
 
 @app.get(settings.metrics_path, include_in_schema=False)

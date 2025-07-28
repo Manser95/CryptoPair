@@ -9,9 +9,11 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
-COPY requirements.txt .
+COPY pyproject.toml poetry.lock* ./
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only=main
 
 # Copy source code for development stage
 COPY . .

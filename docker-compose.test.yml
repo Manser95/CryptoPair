@@ -1,0 +1,21 @@
+services:
+  test:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.test
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=test
+      - LOG_LEVEL=warning
+      - CACHE_TTL_L1=5
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./coverage:/app/coverage
+    networks:
+      - test-network
+    command: pytest
+
+networks:
+  test-network:
+    driver: bridge

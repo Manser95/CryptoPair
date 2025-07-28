@@ -22,8 +22,8 @@ class BaseHttpClient:
             
             timeout = aiohttp.ClientTimeout(
                 total=settings.coingecko_timeout,
-                connect=5,
-                sock_read=25
+                connect=settings.coingecko_connect_timeout,
+                sock_read=settings.coingecko_read_timeout
             )
             
             self._session = aiohttp.ClientSession(

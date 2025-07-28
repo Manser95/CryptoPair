@@ -1,6 +1,4 @@
-from fastapi import APIRouter, Depends
-from src.presentation.api.dependencies import get_redis_cache
-from src.infrastructure.cache.redis_cache import RedisCache
+from fastapi import APIRouter
 from src.shared.logging import get_logger
 
 logger = get_logger(__name__)
@@ -18,23 +16,23 @@ async def liveness():
 
 
 @router.get("/readiness")
-async def readiness(redis: RedisCache = Depends(get_redis_cache)):
-    """Readiness check including dependencies"""
-    checks = {
-        "api": "ok",
-        "redis": "ok"
-    }
-    
-    # Check Redis connectivity
-    try:
-        await redis.get("health_check")
-    except Exception as e:
-        logger.error(f"Redis health check failed: {e}")
-        checks["redis"] = "failed"
-    
-    status = "ready" if all(v == "ok" for v in checks.values()) else "not_ready"
-    
+async def readiness():
+    """Readiness check - simplified without Redis"""
     return {
-        "status": status,
-        "checks": checks
+        "status": "ready",
+        "checks": {
+            "api": "ok"
+        }
     }
+
+
+@router.get("/")
+async def health_root():
+    """Health check root endpoint for compatibility"""
+    return {"status": "healthy", "message": "Use /health/liveness or /health/readiness"}
+
+
+@router.get("")
+async def health_root_alt():
+    """Alternative health check root endpoint"""
+    return {"status": "healthy", "message": "Use /health/liveness or /health/readiness"}
