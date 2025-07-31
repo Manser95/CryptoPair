@@ -1,4 +1,20 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    networks:
+      - app-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   app:
     build:
       context: .
@@ -7,18 +23,22 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - WORKERS=16  # Увеличиваем количество воркеров
+      - WORKERS=8
       - LOG_LEVEL=warning  # Снижаем уровень логирования для производительности
       - ENABLE_METRICS=true
-      - CACHE_TTL_L1=5  # Оптимальный TTL
+      - CACHE_TTL=5
       - CACHE_MAX_SIZE=100000  # Больше места для кеша
       - LOG_FORMAT=json
       - PYTHONUNBUFFERED=1
       - UVLOOP_USE_MONOTONIC=1  # Оптимизация для uvloop
+      - REDIS_URL=redis://redis:6379/0
     networks:
       - app-network
     volumes:
+      - ./src:/app/src
       - ./logs:/app/logs
+    depends_on:
+      - redis
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -103,6 +123,7 @@ networks:
     driver: bridge
 
 volumes:
+  redis-data:
   prometheus-data:
   grafana-data:
   loki-data:

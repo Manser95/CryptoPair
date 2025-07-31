@@ -5,9 +5,8 @@ from typing import AsyncGenerator
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock
 
-from src.domain.entities.crypto_price import CryptoPrice
-from src.application.interfaces.cache_service import CacheServiceInterface
-from src.application.interfaces.price_repository import PriceRepositoryInterface
+from src.data_access.models.price_model import PriceData
+from src.data_access.repositories.interfaces import CacheRepository, PriceRepository
 from src.presentation.main import app
 
 
@@ -20,11 +19,11 @@ def event_loop():
 
 
 @pytest.fixture
-def sample_crypto_price():
-    """Sample crypto price entity for testing"""
-    return CryptoPrice(
-        symbol="eth",
-        vs_currency="usdt",
+def sample_price_data():
+    """Sample price data for testing"""
+    return PriceData(
+        base="ETH",
+        quote="USDT",
         price=2500.50,
         volume_24h=1000000.0,
         price_change_24h=5.25,
@@ -33,19 +32,19 @@ def sample_crypto_price():
 
 
 @pytest.fixture
-def mock_cache_service():
-    """Mock cache service for testing"""
-    cache_service = AsyncMock(spec=CacheServiceInterface)
-    cache_service.get.return_value = None
-    cache_service.set.return_value = None
-    cache_service.delete.return_value = None
-    return cache_service
+def mock_cache_repository():
+    """Mock cache repository for testing"""
+    cache_repo = AsyncMock(spec=CacheRepository)
+    cache_repo.get.return_value = None
+    cache_repo.set.return_value = None
+    cache_repo.delete.return_value = None
+    return cache_repo
 
 
 @pytest.fixture
 def mock_price_repository():
     """Mock price repository for testing"""
-    repository = AsyncMock(spec=PriceRepositoryInterface)
+    repository = AsyncMock(spec=PriceRepository)
     return repository
 
 

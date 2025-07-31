@@ -1,4 +1,20 @@
 services:
+  redis-dev:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - redis-dev-data:/data
+
   app:
     build:
       context: .
@@ -11,7 +27,8 @@ services:
       - WORKERS=1
       - LOG_LEVEL=debug
       - RELOAD=true
-      - CACHE_TTL_L1=5
+      - CACHE_TTL=5
+      - REDIS_URL=redis://redis-dev:6379/0
       - COINGECKO_API_KEY=
     volumes:
       - ./src:/app/src
@@ -19,7 +36,12 @@ services:
     command: ["uvicorn", "src.presentation.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     networks:
       - app-network
+    depends_on:
+      - redis-dev
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  redis-dev-data:

@@ -145,6 +145,62 @@ def track_external_api_metrics(api: str, endpoint: str):
     return decorator
 
 
+def track_service_metrics(service: str, operation: str):
+    """Decorator to track service-level metrics"""
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            start_time = time.time()
+            status = "success"
+            
+            try:
+                result = await func(*args, **kwargs)
+                return result
+            except Exception as e:
+                status = "error"
+                raise
+            finally:
+                duration = time.time() - start_time
+                # You can add service-specific metrics here
+                # For now, using request metrics with service prefix
+                REQUEST_COUNT.labels(
+                    method=f"{service}.{operation}",
+                    endpoint=operation,
+                    status=status
+                ).inc()
+                REQUEST_DURATION.labels(
+                    method=f"{service}.{operation}",
+                    endpoint=operation
+                ).observe(duration)
+        
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            start_time = time.time()
+            status = "success"
+            
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except Exception as e:
+                status = "error"
+                raise
+            finally:
+                duration = time.time() - start_time
+                REQUEST_COUNT.labels(
+                    method=f"{service}.{operation}",
+                    endpoint=operation,
+                    status=status
+                ).inc()
+                REQUEST_DURATION.labels(
+                    method=f"{service}.{operation}",
+                    endpoint=operation
+                ).observe(duration)
+        
+        return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+    
+    return decorator
+
+
 def get_metrics():
     """Generate metrics in Prometheus format"""
     return generate_latest()

@@ -14,8 +14,13 @@ class Settings(BaseSettings):
     
     
     # Cache TTL - оптимизировано для высокой нагрузки
-    cache_ttl_l1: int = Field(default=5, description="Memory cache TTL in seconds (увеличено до 5)")
+    cache_ttl: int = Field(default=5, description="Cache TTL in seconds")
     cache_max_size: int = Field(default=100000, description="Maximum cache entries (увеличено до 100k)")
+    
+    # Redis
+    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
+    redis_max_connections: int = Field(default=50, description="Maximum Redis connections")
+    redis_decode_responses: bool = Field(default=True, description="Decode Redis responses")
     
     # CoinGecko API - агрессивные таймауты для быстрого отклика
     coingecko_api_key: Optional[str] = Field(default=None)
@@ -35,7 +40,7 @@ class Settings(BaseSettings):
     retry_wait_random_max: int = Field(default=1)
     
     # Rate limiting
-    rate_limit_calls: int = Field(default=30)
+    rate_limit_calls: int = Field(default=29)
     rate_limit_period: int = Field(default=60)
     
     # AIOHTTP

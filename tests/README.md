@@ -164,8 +164,7 @@ Ensure your user has permissions to run Docker commands without sudo.
 The test environment uses these defaults:
 - `ENVIRONMENT=test`
 - `LOG_LEVEL=warning`
-- `CACHE_TTL_L1=1`
-- `CACHE_TTL_L2=2`
+- `CACHE_TTL=5`
 
 You can override them in `docker-compose.test.yml` if needed.
 

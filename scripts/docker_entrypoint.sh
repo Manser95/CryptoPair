@@ -10,7 +10,7 @@ export PYTHONPATH=/app:$PYTHONPATH
 echo "Starting Crypto API with Gunicorn + Uvicorn workers..."
 echo "Workers: $WORKERS"
 echo "Log level: $LOG_LEVEL"
-echo "Cache TTL: ${CACHE_TTL_L1:-5} seconds"
+echo "Cache TTL: ${CACHE_TTL:-5} seconds"
 echo "Cache size: ${CACHE_MAX_SIZE:-100000} entries"
 
 # Запуск через Gunicorn с Uvicorn воркерами

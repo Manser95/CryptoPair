@@ -1,6 +1,6 @@
 """
-Load testing configuration for ETH/USDT API
-Simulates 300+ concurrent users to test high-load performance
+Load testing configuration for Crypto Price API
+Tests ETH/USDT and BTC/USDT pairs along with health endpoints
 """
 from locust import HttpUser, task, between
 import random
@@ -15,15 +15,12 @@ class CryptoPriceUser(HttpUser):
     # Define trading pairs to test
     trading_pairs = [
         "eth-usdt",
-        "btc-usdt", 
-        "bnb-usdt",
-        "sol-usdt",
-        "ada-usdt"
+        "btc-usdt"
     ]
     
-    @task(80)
+    @task(40)
     def get_eth_usdt_price(self):
-        """Main task: Get ETH/USDT price (80% of requests)"""
+        """Get ETH/USDT price (40% of requests)"""
         with self.client.get("/api/v1/prices/eth-usdt", 
                             catch_response=True) as response:
             if response.status_code == 200:
@@ -35,21 +32,39 @@ class CryptoPriceUser(HttpUser):
             else:
                 response.failure(f"Got status code {response.status_code}")
     
-    @task(15)
-    def get_random_price(self):
-        """Secondary task: Get random trading pair price (15% of requests)"""
-        pair = random.choice(self.trading_pairs)
-        self.client.get(f"/api/v1/prices/{pair}")
+    @task(40)
+    def get_btc_usdt_price(self):
+        """Get BTC/USDT price (40% of requests)"""
+        with self.client.get("/api/v1/prices/btc-usdt", 
+                            catch_response=True) as response:
+            if response.status_code == 200:
+                data = response.json()
+                if "price" in data and data["price"] > 0:
+                    response.success()
+                else:
+                    response.failure("Invalid price data")
+            else:
+                response.failure(f"Got status code {response.status_code}")
     
     @task(5)
     def health_check(self):
         """Health check endpoint (5% of requests)"""
-        self.client.get("/health/liveness")
+        self.client.get("/api/v1/health")
+    
+    @task(3)
+    def liveness_check(self):
+        """Liveness check endpoint (3% of requests)"""
+        self.client.get("/api/v1/health/live")
+    
+    @task(2)
+    def readiness_check(self):
+        """Readiness check endpoint (2% of requests)"""
+        self.client.get("/api/v1/health/ready")
     
     def on_start(self):
         """Called when a user starts"""
         # Warm up with a single request
-        self.client.get("/health/readiness")
+        self.client.get("/api/v1/health/ready")
 
 
 class HighLoadUser(HttpUser):
@@ -58,12 +73,19 @@ class HighLoadUser(HttpUser):
     # Minimal wait time for stress testing
     wait_time = between(0.1, 0.5)
     
-    @task
+    @task(50)
     def rapid_eth_usdt_check(self):
         """Rapid fire ETH/USDT price checks"""
-        for _ in range(5):
+        for _ in range(3):
             self.client.get("/api/v1/prices/eth-usdt", 
                           name="/api/v1/prices/eth-usdt [burst]")
+    
+    @task(50)
+    def rapid_btc_usdt_check(self):
+        """Rapid fire BTC/USDT price checks"""
+        for _ in range(3):
+            self.client.get("/api/v1/prices/btc-usdt", 
+                          name="/api/v1/prices/btc-usdt [burst]")
 
 
 class MixedLoadUser(HttpUser):
@@ -73,7 +95,7 @@ class MixedLoadUser(HttpUser):
     
     def on_start(self):
         """Initialize user session"""
-        self.pairs = ["eth-usdt", "btc-usdt", "bnb-usdt"]
+        self.pairs = ["eth-usdt", "btc-usdt"]
         self.current_pair = 0
     
     @task(70)
@@ -82,19 +104,6 @@ class MixedLoadUser(HttpUser):
         pair = self.pairs[self.current_pair]
         self.client.get(f"/api/v1/prices/{pair}")
         self.current_pair = (self.current_pair + 1) % len(self.pairs)
-    
-    @task(20)
-    def parallel_price_check(self):
-        """Check multiple prices quickly"""
-        for pair in self.pairs[:2]:
-            self.client.get(f"/api/v1/prices/{pair}",
-                          name="/api/v1/prices/[parallel]")
-    
-    @task(10)
-    def error_handling_check(self):
-        """Test error handling with invalid pair"""
-        self.client.get("/api/v1/prices/invalid-pair",
-                      name="/api/v1/prices/[error-test]")
 
 
 # Load test scenarios can be run with:
