@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock
 
-from src.data_access.models.price_model import PriceData
+from src.data_access.models.price_model import PriceModel
 from src.data_access.repositories.interfaces import CacheRepository, PriceRepository
 from src.presentation.main import app
 
@@ -21,9 +21,9 @@ def event_loop():
 @pytest.fixture
 def sample_price_data():
     """Sample price data for testing"""
-    return PriceData(
-        base="ETH",
-        quote="USDT",
+    return PriceModel(
+        symbol="eth",
+        vs_currency="usdt",
         price=2500.50,
         volume_24h=1000000.0,
         price_change_24h=5.25,
