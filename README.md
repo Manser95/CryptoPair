@@ -39,12 +39,12 @@ cd cryptopair
 make up
 
 # Или вручную:
-docker-compose up -d
+docker compose up -d
 
 # Проверка статуса
 make ps
 # или
-docker-compose ps
+docker compose ps
 
 # API будет доступен на:
 # - API: http://localhost:8000
@@ -61,7 +61,7 @@ docker-compose ps
 make dev-up
 
 # Или вручную:
-docker-compose -f docker-compose.dev.yml up
+docker compose -f docker-compose.dev.yml up
 
 # API будет доступен на http://localhost:8000
 
@@ -252,7 +252,7 @@ make benchmark-quick
 ## Troubleshooting
 
 ### Высокая latency
-1. Проверить логи: `docker-compose logs app`
+1. Проверить логи: `docker compose logs app`
 2. Проверить CPU/Memory: `docker stats`
 3. Увеличить количество workers или добавить реплики
 

@@ -34,7 +34,7 @@ Gunicorn с uvicorn.workers.UvicornWorker
 
 Docker (обязателен)
 
-docker-compose (обязателен)
+docker compose (обязателен)
 
 Настроенный Dockerfile и docker-compose.yml для локального запуска
 

@@ -5,6 +5,8 @@ set -e
 WORKERS=${WORKERS:-8}
 LOG_LEVEL=${LOG_LEVEL:-info}
 
+export PYTHONPATH=/app:$PYTHONPATH
+
 echo "Starting Crypto API with Gunicorn + Uvicorn workers..."
 echo "Workers: $WORKERS"
 echo "Log level: $LOG_LEVEL"

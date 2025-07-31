@@ -143,7 +143,7 @@ poetry install --with dev
 make clean
 
 # Rebuild images
-docker-compose -f docker-compose.test.yml build --no-cache
+docker compose -f docker-compose.test.yml build --no-cache
 ```
 
 ### Permission issues

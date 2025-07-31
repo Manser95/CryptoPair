@@ -148,10 +148,10 @@ pytest tests/unit/domain/test_crypto_price.py -v -s --pdb
 ### Docker не найден
 ```bash
 # Ubuntu/Debian
-sudo apt-get update && sudo apt-get install docker.io docker-compose
+sudo apt-get update && sudo apt-get install docker.io docker compose
 
 # macOS
-brew install docker docker-compose
+brew install docker docker compose
 ```
 
 ### Порты заняты
@@ -175,7 +175,7 @@ docker stats
 ### Тесты падают из-за зависимостей
 ```bash
 # Пересобрать образы
-docker-compose -f docker-compose.test.yml build --no-cache
+docker compose -f docker-compose.test.yml build --no-cache
 
 # Или полная очистка
 make clean && make setup-test
